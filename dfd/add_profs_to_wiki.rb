@@ -5,7 +5,7 @@ $NEW_FILE = 'new_people.dump'
 
 ppl = People.load $NEW_FILE
 
-ppl.persons[300..-1].each_with_index do |p, i|
+ppl.persons.each_with_index do |p, i|
   page = p.name.gsub(' ','_')
   puts i.to_s
   if `/usr/local/php5/bin/php html/wiki/maintenance/getText.php #{page}` == '' && page != 'Dartmouth_Faculty_Directory'
