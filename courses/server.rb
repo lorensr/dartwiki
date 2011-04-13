@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 require 'singleton'
 
 class CourseSet
@@ -73,11 +72,7 @@ class Course
                 :section,
                 :description,
                 :offered,
-                :title,
-                :note,
-                :distribs,
-                :wcults,
-                :profs # array of [name,term] pairs
+                :title
                 )
 
   def initialize subject, number, section = nil, title = nil
@@ -86,88 +81,7 @@ class Course
     @number = number
     @section = section
     @title = title
-    @offered = ''
-    @distribs = []
-    @wcults = []
-    @profs = []
   end
-
-  # examples:
-  # "Dist: LIT; WCult: CI (pending faculty approval). Colbert."
-  # "Dist: LIT; WCult: NW. Franconi, Pastor (11W), Buéno, Walker (12W)."
-  # "Dist: INT or SOC; WCult: NW. Haynes."
-  # "Dist: LIT. Favor."
-  # 
-  # states = [:dist,:cult,:prof]
-  # 
-  def parse_distrib_and_prof desc, distrib
-    cur = ''
-    state = :dist
-    desc[distrib+6..-1].each_char do |c|
-      case state
-      when :dist
-        case c
-        when '.'
-          @distribs << cur
-          state = :prof
-          cur = ''
-        when ';'
-          @distribs << cur
-          state = :cult
-          cur = ''
-        when ' '
-          if cur[-2..-1] == 'or'
-            cur = ''
-            next
-          else
-            @distribs << cur
-          end
-          cur = ''
-        else
-          cur << c
-        end
-      when :cult
-        case c
-        when '.'
-          @wcults << cur.strip
-          state = :prof
-          cur = ''
-        when ' '
-          if cur == '' or cur[-1] == ':'
-            cur = ''
-            next
-          end
-        else
-          cur << c
-        end
-      when :prof
-        case c
-        when '.', ','
-          if cur[-1] == ')'
-            pair = cur.split
-            pair[-1] = pair[-1][1..3]
-            name = pair[0..-2]
-            @profs << name + [pair[-1]]
-          else
-            @profs << [cur]
-          end
-          cur = ''
-        when ' '
-          if cur == ''
-            next
-          else
-            cur << c
-          end
-        else
-          cur << c
-        end
-      end
-    end
-
-    @profs.each do |pair|
-      pair[0] = CourseSet.get_full_name pair.first
-    end
-  end  
 
   def == o
     case o

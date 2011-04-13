@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 require 'nokogiri'
 require 'open-uri'
 require 'fileutils'
@@ -6,7 +5,7 @@ require_relative '../dfd/person'
 
 require_relative 'types.rb'
 
-$people = People.load File.join(File.dirname(__FILE__), '..', 'dumps', 'people.dump')
+$profs = People.load File.join(File.dirname(__FILE__), '..', 'dumps', 'people.dump')
 
 class Course
 end
@@ -123,60 +122,36 @@ class CourseSet
       desc = nil
       while !done && next_p
         case next_p['class']
-        when 'courseoffered', 'courseofferedbottom', 'pa14', 'crsoffered1', 'crsoffered2', 'crsofferedmid', 'courseoffered1', 'courseoffered-mid', 'courseoffered2'
-          course.offered += ' ' unless course.offered == ''
-          course.offered << next_p.inner_text.strip
+        when 'courseoffered', 'courseofferedbottom', 'pa14'
+          course.offered = next_p.inner_text.strip
         when 'coursedescptnpar'
           desc = next_p.inner_text
-          if desc
-            distrib = desc =~ /Dist: /
-            if distrib
-              course.parse_distrib_and_prof desc, distrib
-              desc = desc[0..distrib-1]
-            else
-              words = desc.split
-              if words.size == 1 or words[-2][-1] == '.'
-                last_name = words[-1][0..-2]
-                course.profs << [CourseSet.get_full_name(last_name)]
-                desc = words[0..-2].join ' '
-              end
-            end
+          dist = desc =~ /Dist: /
+          if dist
+            p desc[dist..-1]
           end
-         
           if course.description
-            course.description << "\n\n" + desc.strip
+            course.description << "\n\n" + next_p.inner_text
           else
-            course.description = desc.strip
+            course.description = next_p.inner_text
           end
-        when 'coursetitle', 'normal-web-'
+        when 'coursetitle'
           txt = next_p.inner_text
           space = txt.index ' '
           num = txt[0..space-1]
           title = txt[space+1..-1]
-          
-          paren = title.index '('
-          note = nil
-          if paren
-            note = title[paren+1..title.index(')')-1]
-            title = title[0..paren-2]
-          end
-          
           num.chop! if num[-1] == '.'
           course = get_course code, num
           if course
             course.title = title.strip
           else
-            course = Course.new code.upcase, num, nil, title.strip
+            course = Course.new code, num, nil, title.strip
             @courses << course
           end
-          course.note = note
-        when 'subsectitle', 'normal', 'bodypar', 'subsectitle2', 'firstpar'
+        when 'subsectitle'
           ;
-        when 'bodyparsmall', 'footnote-link'
-          done = true
         else
           done = true
-          puts code
           puts next_p
         end
         next_p = next_p.next_element
@@ -185,22 +160,8 @@ class CourseSet
     end
   end
 
-  def self.get_full_name last_name
-    matches = $people.persons.select {|p| p.match? last_name}
-    if matches.size == 1
-      matches.first.name
-    else
-      last_name
-    end
-  end    
-    
-
-
   def get_course dept, num
-    cs = @courses.select { |c|
-      c.subject == dept &&
-      (c.number == num or c.number.delete '0' == num)
-    }
+    cs = @courses.select {|c| c.subject == dept && c.number == num}
     sections = cs.map &:section
     cs[sections.index sections.min] unless sections.empty?
   end
@@ -216,7 +177,7 @@ class CourseSet
     end
 
     c.update_medians
-    c.update_descriptions
+#    c.update_descriptions
 
     File.open dump, 'w' do |f|
       Marshal.dump c, f

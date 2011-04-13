@@ -22,6 +22,10 @@ class Person
                 :current_projects
                 )
 
+  def match? last_name
+    name[name.index(' ')..-1].include? last_name
+  end
+
   def marshal_dump
     [@name, @titles, @pic, @departments, @links, @email, @phone, @office, @education, @areas_of_expertise, @selected_works, @current_projects]
   end
