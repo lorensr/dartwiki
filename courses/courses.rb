@@ -162,6 +162,10 @@ class CourseSet
           end
           
           num.chop! if num[-1] == '.'
+
+          # remove leading zeros
+          num.gsub!(/^0+/,'')
+          
           course = get_course code, num
           if course
             course.title = title.strip
