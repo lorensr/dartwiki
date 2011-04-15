@@ -1,3 +1,15 @@
 == dfd
 
 code to scrape the dartmouth faculty directory and import it into dartwiki.org. complicated by a limited hosting environment. i first ran dfd.rb, which scrapes and saves the objects, then transferred them to the dartwiki server, then ran the mediawiki php commands to import the pictures and page text.
+
+== courses
+
+scrapes registrar's median pages going back to around 2000 and current orc.
+
+  r courses/test/course_set_test.rb -n test_update
+
+creates a 'dump' file containing a CourseSet object.
+
+  r courses/test/course_set_test.rb -n test_print
+
+prints the 'dump' file in text format
