@@ -1,5 +1,6 @@
 require 'test/unit'
 require_relative '../courses'
+require 'json'
 
 class TestCourseSet < Test::Unit::TestCase
   def test_update_median_term
@@ -11,7 +12,7 @@ class TestCourseSet < Test::Unit::TestCase
   end
 
   def test_update
-    CourseSet.update 'dump'    
+    CourseSet.update 'dump'
   end
 
   def test_parse_dept
@@ -22,6 +23,24 @@ class TestCourseSet < Test::Unit::TestCase
   def test_print
     File.open 'dump' do |f|
       pp Marshal.load f
+    end
+  end
+
+  def test_json
+    File.open 'dump' do |f|
+      cs = Marshal.load(f)
+      File.open('course_set.json', 'w') {|f| f.write(JSON.generate(cs)) }
+    end
+  end
+
+  def test_print_notes
+    File.open 'dump' do |f|
+      cs = Marshal.load(f)
+      cs.courses.each do |c|
+        if c.note
+          cs.link_note c.note
+        end
+      end
     end
   end
 end

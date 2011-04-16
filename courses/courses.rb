@@ -18,9 +18,11 @@ class CourseSet
   REMOTE_ORC_ROOT = 'https://www.dartmouth.edu/~reg/courses/desc/'
 
   def update_medians
-    Term.parse('10s').upto(Term.now) do |t|
-      local_file = File.join(LOCAL_ROOT, t.to_s)
-      unless File.exists? local_file
+    Term.parse('00S').upto(Term.now) do |t|
+      local_file = File.join(LOCAL_ROOT, 'terms', t.to_s)
+      if File.exists? local_file
+        update_medians_term t, Nokogiri::HTML(File.open(local_file))
+      else
         file = nil
         begin
           file = open(REMOTE_MEDIAN_ROOT + t.to_s + '.html')
@@ -35,7 +37,7 @@ class CourseSet
         page = Nokogiri::HTML file
 
         next if page.xpath('//title').inner_text == 'This Page Has Moved'
-          
+        
         copy file, local_file
         update_medians_term t, page
       end
@@ -47,7 +49,7 @@ class CourseSet
   end
 
   def get url
-    local = File.join LOCAL_ROOT, url[url.rindex('/')+1..-1]
+    local = File.join LOCAL_ROOT, 'depts', url[url.rindex('/')+1..-1]
     unless File.exists? local
       p url
       f = open(url)
@@ -71,7 +73,7 @@ class CourseSet
       end
       if passed_header
         cells = r.xpath('td').map &:inner_text
-        foo, code, enrolled, median = cells.map &:strip
+        _, code, enrolled, median = cells.map &:strip
         
         course_idx = @courses.index code
         course = nil
@@ -114,14 +116,80 @@ class CourseSet
     end
   end
 
+  # examples:
+  # Identical to Government 44
+  # Identical to, and described under, History 75 and Environmental Studies 45
+  def link_note note
+    unless note =~ /Identical to/
+      return
+    end
+
+    n = note.gsub /Identical to/, ''
+    n.gsub! /described under/, ''
+    n.gsub! /( in .*)|( section .*)/, ''
+    sections = n.split ','
+    sections.delete_if do |x|
+      x.gsub(/(and)|,/, '').strip == ''
+    end
+    
+    sections.each do |x|
+      x.strip!
+      x.gsub! /^(and )|(also )/, ''
+      x.gsub! /;.*/, ''
+      x.strip!
+    end
+
+
+    sections.each do |s|
+
+      #["History 75 and Environmental Studies 45"]
+      s =~ /([^\d.]+)([\d\.]+)([^\d.\/]+)([\d\.]+)/
+      if $~
+        #<MatchData "Women’s and Gender Studies 43.2 and Classical Studies 11" 1:"Women’s and Gender Studies " 2:"43.2" 3:" and Classical Studies " 4:"11">
+        course_replace note, $~[1].strip, $~[2]
+        course_replace note, $~[3][5..-1].strip, $~[4]
+      else
+        s =~ /([^\d.]+)([\d\.\/]+)/
+        if $~
+          course_replace note, $~[1].strip, $~[2]
+        else
+          puts 'unrecognized course name string: ' + s
+        end
+      end
+    end
+  end
+
+  # Women's and Gender Studies 4 -> WGST 4
+  def course_replace note, dept, num
+    puts note
+    repl = dept + ' ' + num
+    if @departments.value? dept
+      note.gsub! repl, '[[' + repl + ']]'
+    elsif code = @departments[dept]
+      note.gsub! repl, '[[' + code + ' ' + num + ']]'
+    end
+    puts note
+  end
+
   def parse_dept name, code
     noko(REMOTE_ORC_ROOT + code + '.html') do |page|
+      @departments[page.xpath('//h1').inner_text.strip] = code.upcase
+
       next_p = page.xpath('//p[@class="coursetitle"]').first
+      unless next_p
+        #ps = page.xpath('//p[@class="normal"]')
+        #todo support for anthro classes
+      end
+
       done = false
       course = nil
       offered = nil
       desc = nil
+      
       while !done && next_p
+        if code == 'anth'
+          puts next_p['class']
+        end
         case next_p['class']
         when 'courseoffered', 'courseofferedbottom', 'pa14', 'crsoffered1', 'crsoffered2', 'crsofferedmid', 'courseoffered1', 'courseoffered-mid', 'courseoffered2'
           course.offered += ' ' unless course.offered == ''
@@ -219,8 +287,8 @@ class CourseSet
       c = CourseSet.new
     end
 
-    c.update_medians
     c.update_descriptions
+    c.update_medians
 
     File.open dump, 'w' do |f|
       Marshal.dump c, f

@@ -1,16 +1,46 @@
 # -*- coding: utf-8 -*-
-require 'singleton'
+
+module AutoJ
+  def auto_j
+    h = {}
+    instance_variables.each do |e|
+      o = instance_variable_get e.to_sym
+      h[e[1..-1]] = (o.respond_to? :auto_j) ? o.auto_j : o;
+    end
+    h
+  end
+  def to_json *a
+    auto_j.to_json *a
+  end
+end
 
 class CourseSet
-  attr_accessor :courses, :median_terms
+  include AutoJ
+
+  attr_accessor :courses, :median_terms, :departments
 
   def initialize
     @median_terms = []
     @courses = []
+    @departments = {}
   end
+
+  # def to_json(*a)
+  #   {
+  #     'json_class'   => self.class.name,
+  #     'data'         =>
+  #     {
+  #       'courses' => @courses,
+  #       'median_terms' => @median_terms,
+  #       'departments' => @departments
+  #     }
+  #   }.to_json(*a)
+  # end
 end
 
 class Term
+  include AutoJ
+
   attr_accessor :year, :quarter
   QUARTERS = ['W', 'S', 'X', 'F']
 
@@ -66,6 +96,8 @@ class Term
 end
 
 class Course
+  include AutoJ
+  
   attr_accessor(
                 :instances, # hash: term => instance
                 :subject,
@@ -167,6 +199,8 @@ class Course
     @profs.each do |pair|
       pair[0] = CourseSet.get_full_name pair.first
     end
+
+    @distribs.uniq!
   end  
 
   def == o
@@ -181,7 +215,7 @@ class Course
   end
   
   def codes_match o
-    @subject == o.subject && @number == o.number && @section == o.section
+    @subject == o.subject && @number == o.number # && @section == o.section
   end
   
   def self.parse s
@@ -195,11 +229,18 @@ class Course
       num = s[4..6]
       sec = s[7..8]
     end
+    if num
+      num.gsub! /^0+/, ''
+    else
+      puts s
+    end
     Course.new sub, num, sec
   end
 end
 
 class Instance
+  include AutoJ
+
   attr_accessor :enrolled, :median
 
   def initialize enrolled, median
