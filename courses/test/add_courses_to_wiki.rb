@@ -1,4 +1,4 @@
-require 'courses'
+require_relative '../courses'
 
 File.open 'dump' do |f|
   cs = Marshal.load f
