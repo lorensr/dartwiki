@@ -273,7 +273,8 @@ class Course
     unless @instances.empty?
       wiki << "
 == Medians ==
-{| class='wikitable'
+{| class='wikitable sortable'
+|+ Sortable table
 |-
 ! Median
 ! Term
