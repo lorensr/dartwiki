@@ -2,8 +2,7 @@ require_relative '../courses'
 
 File.open 'dump' do |f|
   cs = Marshal.load f
-  courses = cs.courses[22]
-  [courses].each do |course|
+  cs.courses.each do |course|
     page = course.subject + '_' + course.number
     File.open 'tmp', 'w+' do |tmp|
       tmp.write course.to_wiki cs.departments
