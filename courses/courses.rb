@@ -178,7 +178,7 @@ class CourseSet
       next_p = page.xpath('//p[@class="coursetitle"]').first
       unless next_p
         #ps = page.xpath('//p[@class="normal"]')
-        #todo support for anthro classes
+        #todo support for anthro classes - involves changing state machine
       end
 
       done = false

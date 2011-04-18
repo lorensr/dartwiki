@@ -43,5 +43,12 @@ class TestCourseSet < Test::Unit::TestCase
       end
     end
   end
+
+  def test_to_wiki
+    File.open 'dump' do |f|
+      cs = Marshal.load(f)
+      puts cs.courses[22].to_wiki cs.departments
+    end
+  end    
 end
 

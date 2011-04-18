@@ -236,6 +236,77 @@ class Course
     end
     Course.new sub, num, sec
   end
+
+  def to_wiki departments
+    dept = departments.key @subject
+    wiki = "
+{{Infobox course
+| name                      = #{@subject} #{@number}: #{@title}
+| department           = #{dept}
+| offered                   = #{@offered}
+| note                        = #{@note}
+| distributives          = #{@distribs.map {|x| '[['+x+']]'}.join ', '}
+| world_culture        = #{@wcults.map {|x| '[[World Culture/'+x+'|'+x+']]'}.join ', '}
+| professors             = "
+
+    @profs.each do |pair|
+      if pair.size > 1
+        wiki << pair[1] + ': '
+      end
+      wiki << "[[#{pair[0]}]], "
+    end
+
+    2.times {wiki.chop!}
+      
+
+    wiki << "
+}}
+
+'''#{@title}'''
+
+== ORC Description ==
+
+#{@description}
+
+"
+
+    unless @instances.empty?
+      wiki << "
+== Medians ==
+{| class='wikitable'
+|-
+! Median
+! Term
+! Enrolled
+|-"
+      @instances.each do |term,instance|
+        wiki << "
+| #{instance.median}
+| #{term}
+| #{instance.enrolled}
+|-"
+      end
+
+      wiki << "
+|}
+
+"
+    end
+
+    wiki << "
+[[Category:Courses]]
+[[Category:#{dept}]]"
+    @distribs.each do |d|
+      wiki << "
+[[Category:#{d}]]"
+    end
+    
+    @wcults.each do |wc|
+      wiki << "
+[[Category:World Culture/#{wc}]]"
+    end
+    wiki
+  end
 end
 
 class Instance
