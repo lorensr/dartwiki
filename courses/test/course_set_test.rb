@@ -34,20 +34,33 @@ class TestCourseSet < Test::Unit::TestCase
   end
 
   def test_print_notes
+    x = []
     File.open 'dump' do |f|
       cs = Marshal.load(f)
       cs.courses.each do |c|
-        if c.note
-          cs.link_note c.note
-        end
+        # if c.note
+        #   cs.link_note c.note
+        # end
+
+        #x << c.subject.to_s + ' ' + c.number.to_s
+
+        x << c.title
       end
     end
+
+    puts x.sort
   end
 
   def test_to_wiki
+    dump_open do |cs|
+      puts cs.courses[22].to_wiki cs.departments
+    end
+  end
+
+  def dump_open
     File.open 'dump' do |f|
       cs = Marshal.load(f)
-      puts cs.courses[22].to_wiki cs.departments
+      yield cs
     end
   end    
 end

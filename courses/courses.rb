@@ -79,8 +79,12 @@ class CourseSet
         course = nil
         if course_idx
           course = @courses[course_idx]
+        elsif code == nil || code =~ /^\s*$/ || code.size == 1
+          puts 'next'
+          next
         else
           course = Course.parse code
+          next unless course
         end
         
         course.instances[term] = Instance.new enrolled, median
@@ -238,6 +242,7 @@ class CourseSet
           if course
             course.title = title.strip
           else
+            puts 'courses.rb ' + code + ' ' + num if num[0] =~ /[a..z]/
             course = Course.new code.upcase, num, nil, title.strip
             @courses << course
           end

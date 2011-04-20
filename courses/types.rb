@@ -204,6 +204,10 @@ class Course
   end  
 
   def == o
+    if o.size == 1 || o.size == 2
+      return false
+    end
+
     case o
     when String
       codes_match Course.parse(o)
@@ -215,24 +219,47 @@ class Course
   end
   
   def codes_match o
-    @subject == o.subject && @number == o.number # && @section == o.section
+    o && @subject && o.subject && @number && o.number && @subject == o.subject && @number == o.number # && @section == o.section
   end
   
   def self.parse s
+    if s.size < 5 || s =~ /[ 0..9]/
+      return nil
+    end
+
+    unless s[0] =~ /[a..zA..Z]/
+      s[0] = ''
+    end
+    
     sub = ''
     num = ''
     sec = ''
     if s =~ /-/
       sub, num, sec = s.split '-'
+    elsif s =~ / /
+      sub, num, sec = s.split ' '
+    elsif s =~ /^[a-zA-Z0-9]*$/
+      return nil
     else
+      puts 'else: ' + s
       sub = s[0..3]
       num = s[4..6]
       sec = s[7..8]
     end
+    sub.strip!
+
     if num
       num.gsub! /^0+/, ''
     else
-      puts s
+      puts 'not num: ' + s.inspect
+      puts s.size
+      puts s.bytes.inspect
+    end
+    if num == nil || num[0] =~ /[A..Z]/
+      puts 'here'
+      puts 'types.rb ' + sub.inspect + ' ' + num.inspect + ' ' + s.inspect
+      puts self.inspect
+      throw Exception
     end
     Course.new sub, num, sec
   end
