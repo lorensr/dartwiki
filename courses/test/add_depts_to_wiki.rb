@@ -9,7 +9,7 @@ class Object
       f.write text
     end
 
-    `cat tmp | php /var/dartwiki-www/wiki/maintenance/edit.php -s "automatically generated" #{page}`
+    `cat tmp | php /var/dartwiki-www/wiki/maintenance/edit.php -s "automatically generated" #{page.gsub(' ','_')}`
   end
 
   def tmp
@@ -44,7 +44,7 @@ File.open 'dump' do |f|
       end
     end
 
-    `cat tmp | php /var/dartwiki-www/wiki/maintenance/edit.php -s "automatically generated" Category:#{name}`
+    `cat tmp | php /var/dartwiki-www/wiki/maintenance/edit.php -s "automatically generated" Category:#{name.gsub(' ', '_')}`
 
 
     write "#REDIRECT [[Category:#{name}]]", code
