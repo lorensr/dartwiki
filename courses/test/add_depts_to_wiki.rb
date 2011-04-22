@@ -1,5 +1,6 @@
+require 'net/dnd'
+
 require_relative '../courses'
-require_relative '../../../net-dnd/lib/net/dnd'
 
 $dnd = Net::DND.start('dnd.dartmouth.edu', ['email'])
 
