@@ -4,12 +4,19 @@ code to scrape the dartmouth faculty directory and import it into dartwiki.org. 
 
 == courses
 
-scrapes registrar's median pages going back to around 2000 and current orc.
+scrapes registrar's median pages going back to around 2000 and current orc. to get an up-to-date version, run:
 
-  r courses/test/course_set_test.rb -n test_update
+  cd courses/test/
+  rm dump
+  ruby course_set_test.rb -n test_update
 
-creates a 'dump' file containing a CourseSet object.
+this creates a 'dump' file containing a CourseSet object.
 
-  r courses/test/course_set_test.rb -n test_print
+  ruby course_set_test.rb -n test_print
 
 prints the 'dump' file in text format
+
+  rm course_set.json
+  ruby course_set_test.rb -n test_json
+
+creates a new course_set.json file containing the CourseSet in json format.
